@@ -1,0 +1,21 @@
+领世研习所教资成绩查询 · GitHub Pages版
+
+查分地址：https://paradise-0311.github.io/teacher-score-query/
+老师选择考试并输入姓名。同名时选择部门和考场。无需登录，手机、电脑均可使用。
+
+上传成绩
+1. 打开：https://paradise-0311.github.io/teacher-score-query/prepare.html
+2. 选择已登分的.xlsx，核对考试列、人数、满分与状态。
+3. 在“保存到哪场考试”选择新建或要更新的原考试，点击“加入待发布成绩”。
+4. 点击“下载成绩文件”，得到scores.json。
+5. 打开GitHub仓库的docs文件夹，Add file → Upload files，上传scores.json并提交。
+6. 等待Pages部署成功后，老师刷新同一查分网址即可。
+
+首次上线不发布旧考试或演示数据；本次全真模拟登分后再上传。
+
+原始Excel在浏览器中解析，无须上传到GitHub。只需上传生成的scores.json。
+生成页不会直接修改线上成绩，必须完成第5步。
+更新原场次时选择已有考试，避免重复新建。其他场次会保留。
+缺考、不参培、未录分不参与排名；真实0分参与；同分并列排名。
+
+更多维护说明见GITHUB-PAGES.md。

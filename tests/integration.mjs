@@ -1,0 +1,37 @@
+import assert from 'node:assert/strict';
+import fs from 'node:fs/promises';
+import ExcelJS from 'exceljs';
+const base='http://127.0.0.1:5173';
+const login=await fetch(base+'/signin-with-chatgpt?return_to=/admin',{redirect:'manual'});
+const cookie=login.headers.getSetCookie().map(x=>x.split(';')[0]).join('; ');
+assert.ok(cookie,'Local test sign-in should return a cookie');
+async function call(path,body,auth=false,method='POST'){
+  const response=await fetch(base+path,{method,headers:{...(body?{'Content-Type':'application/json'}:{}),...(auth?{cookie}:{})},...(body?{body:JSON.stringify(body)}:{})});
+  return {status:response.status,data:await response.json()};
+}
+assert.equal((await call('/api/admin/exams',undefined,false,'GET')).status,403);
+const records=[['样例甲','教学甲部',120],['样例乙','教学甲部',100],['同名示例','教学甲部',100],['同名示例','教学乙部',0],['缺考示例','教学乙部','缺考'],['待录示例','教学乙部',null],['不参培示例','教学乙部','不参培']].map(([name,department,score],i)=>({id:'r'+(i+1),name,department,subject:'语文',venue:'测试考场',score:typeof score==='number'?score:null,status:typeof score==='number'?'scored':score==='缺考'?'absent':score==='不参培'?'excluded':'pending'}));
+const exam={title:'验收样例（虚构数据）',date:'2026-11-24',maxScore:150,scope:'本地验收样例4名实考老师',provisional:true};
+let result=await call('/api/admin/exams',{exam,records,publish:false},true);assert.equal(result.status,200);
+exam.id=result.data.id;
+assert.equal((await call('/api/lookup',{name:'样例甲',examId:exam.id})).status,404);
+result=await call('/api/admin/exams',{exam,records,publish:true},true);assert.equal(result.status,200);
+result=await call('/api/lookup',{name:' 样例甲 ',examId:exam.id});assert.equal(result.status,200);assert.deepEqual(result.data.statistics,{total:4,rank:1,percentile:75,topPercent:25,tied:1});
+assert.equal(result.data.person.score,120);assert.equal(Object.hasOwn(result.data,'records'),false);
+result=await call('/api/lookup',{name:'同名示例',examId:exam.id});assert.equal(result.data.choices.length,2);assert.equal(Object.hasOwn(result.data.choices[0],'score'),false);
+const zero=result.data.choices.find(p=>p.department==='教学乙部');
+result=await call('/api/lookup',{name:'同名示例',examId:exam.id,personId:zero.id});assert.equal(result.data.person.score,0);assert.equal(result.data.statistics.rank,4);assert.equal(result.data.statistics.percentile,0);
+result=await call('/api/lookup',{name:'缺考示例',examId:exam.id});assert.equal(result.data.statistics.rank,null);
+result=await call('/api/lookup',{name:'不存在的人',examId:exam.id});assert.equal(result.status,404);
+records[0].score=90;
+assert.equal((await call('/api/admin/exams',{exam,records,publish:true},true)).status,200);
+result=await call('/api/lookup',{name:'样例甲',examId:exam.id});assert.equal(result.data.statistics.rank,3);
+result=await call('/api/admin/exams?id='+exam.id,undefined,true,'GET');assert.equal(result.data.records.length,7);
+assert.equal((await call('/api/admin/exams',{id:exam.id,action:'withdraw'},true,'PATCH')).status,200);
+assert.equal((await call('/api/lookup',{name:'样例甲',examId:exam.id})).status,404);
+records[0].score=120;
+assert.equal((await call('/api/admin/exams',{exam,records,publish:true},true)).status,200);
+const cross=await fetch(base+'/api/admin/exams',{method:'POST',headers:{cookie,origin:'https://other.example','Content-Type':'application/json'},body:JSON.stringify({exam,records,publish:true})});assert.equal(cross.status,403);
+const workbook=new ExcelJS.Workbook(),sheet=workbook.addWorksheet('验收样例');sheet.addRow(['姓名','部门','学科','科一 全真模拟\n11/24 周二\n满分150']);for(const p of records)sheet.addRow([p.name,p.department,p.subject,p.status==='scored'?p.score:p.status==='absent'?'缺考':p.status==='excluded'?'不参培':null]);
+await fs.mkdir('work',{recursive:true});await workbook.xlsx.writeFile('work/验收样例_虚构数据.xlsx');
+console.log(JSON.stringify({passed:true,checks:['admin authorization','draft isolation','publication','single-record lookup','ties and percentile','duplicate names','real zero','absence','missing name','replace without duplication','withdraw','cross-origin write rejection'],localExampleExamId:exam.id}));
