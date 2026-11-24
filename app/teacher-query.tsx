@@ -53,7 +53,7 @@ export default function TeacherQuery({ source = apiSource, homeHref = '/', manag
         </> : <div className="non-score"><h3>{labels[result.person.status] || '成绩暂不可用'}</h3><p>{result.person.status === 'pending' ? '本场尚未录入你的成绩，请稍后再查。' : '此状态不参与本场排名和百分位次计算。'}</p></div>}
       </section>}
     </div>
-    <section className="query-panel" aria-label="成绩查询">
+    {!result && <section className="query-panel" aria-label="成绩查询">
       {!result && <div className="page-intro"><h1>教资模拟考试查分</h1></div>}
       {loading ? <div className="empty-state loading-state" role="status"><span className="spinner" aria-hidden="true"/>正在读取已发布考试…</div> : exams.length ? <form className="query-form" noValidate aria-busy={busy} onSubmit={e => { e.preventDefault(); void lookup(); }}>
         <div className="form-field"><label htmlFor="exam">选择考试</label><select id="exam" name="examId" value={examId} onChange={e => { setExamId(e.target.value); resetResult(); }}>{exams.map(e => <option key={e.id} value={e.id}>{e.title}{exams.filter(other => other.title === e.title).length > 1 && e.date ? `（${e.date.replace(/\d{4}-(\d{2})-(\d{2})/g, '$1/$2')}）` : ''}</option>)}</select></div>
@@ -61,7 +61,7 @@ export default function TeacherQuery({ source = apiSource, homeHref = '/', manag
         <button className="primary query-submit" disabled={busy} type="submit">{busy ? <><span className="spinner" aria-hidden="true"/>正在查询…</> : '查询成绩'}</button>
       </form> : <div className="empty-state"><h2>成绩尚未发布</h2><p>组织者完成登分并发布后，即可在这里查询。</p><button className="secondary" onClick={() => void refresh()}>刷新考试列表</button></div>}
       {error && <div className="notice error" role="alert">{error}{!exams.length && <button className="text-button" onClick={() => void refresh()}>重新加载</button>}</div>}
-    </section>
+    </section>}
     {choices.length > 0 && <section className="choice-panel" aria-live="polite"><h2>找到同名老师</h2><p className="muted">请选择与你一致的部门和考场。</p><div className="choice-list">{choices.map(p => <button key={p.id} className="choice" disabled={busy} onClick={() => void lookup(p.id)}><span><strong>{p.name}</strong><small>{[p.department,p.subject,p.venue].filter(Boolean).join(' · ') || '部门未填写'}</small></span><Arrow/></button>)}</div></section>}
     </main><Footer report={Boolean(result)}/></>;
 }
