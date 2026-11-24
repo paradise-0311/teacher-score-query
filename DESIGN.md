@@ -116,3 +116,5 @@ Applied frontend-design for a subject-specific report and restrained typography,
 ## GitHub Pages mode
 
 The user subsequently selected a static, pre-uploaded score lookup website and explicitly accepted that the dataset is publicly downloadable. The static entry reuses the real query component, visual system, normalization, Excel parser and ranking code. The teacher page omits the management link and provides query only. A separate prepare.html supports local Excel parsing, validation, preserving other examinations and downloading scores.json for an explicit GitHub upload. It must never imply that downloading updates the public website. Initial publication intentionally contains no examinations, historical scores or demonstration records, as the user requested. The existing server-backed source remains available; the Pages publish directory is docs only.
+
+The user explicitly removed the provisional/publication badge from the personal report header. Do not display “暂定成绩” or replace it with another status badge in that position. Preserve the stored provisional flag, preparation controls and all score calculations.

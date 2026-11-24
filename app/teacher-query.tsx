@@ -44,7 +44,7 @@ export default function TeacherQuery({ source = apiSource, homeHref = '/', manag
     {result && <div className="page-intro"><h1>教资模拟考试查分</h1></div>}
     <div className="query-feedback" aria-live="polite" aria-atomic="true">
       {result && <section className="result-panel" aria-label="个人成绩报告">
-        <header className="report-header"><div><h2>{result.person.name}</h2><p className="report-identity">{[result.person.department,result.person.subject,result.person.venue].filter(Boolean).join(' · ')}</p></div><span className="status-label">{result.exam.provisional ? '暂定成绩' : '已发布'}</span></header>
+        <header className="report-header"><div><h2>{result.person.name}</h2><p className="report-identity">{[result.person.department,result.person.subject,result.person.venue].filter(Boolean).join(' · ')}</p></div></header>
         <div className="report-exam"><h3>{result.exam.title}</h3><p>{result.exam.date || '以培训安排为准'}</p></div>
         {result.person.status === 'scored' ? <><div className="report-score-layout">
           <div className="score-primary"><p>本场成绩</p><div className="score-value"><strong>{result.person.score}</strong><span>/ {result.exam.maxScore} 分</span></div></div>
